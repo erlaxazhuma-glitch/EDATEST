@@ -3,7 +3,7 @@
 window.APP_CONFIG = {
   // Адрес веб-приложения Google Apps Script (см. ИНСТРУКЦИЯ.md).
   // Пока пусто — сайт работает в демо-режиме: результаты хранятся только в этом браузере.
-  SCRIPT_URL: "",
+  SCRIPT_URL: "https://script.google.com/macros/s/AKfycbxxbClVr2bfDSYpwB2g-W6nIPXyh1ycwdI86FyGzbYkZmHXt_fbXr5uhWiTv0K90ImHxw/exec",
 
   COMPANY: "European Drivers Academy",
   LOGO_FILE: "logo.png", // положите файл логотипа рядом с index.html
