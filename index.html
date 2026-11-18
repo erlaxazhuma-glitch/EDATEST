@@ -1,0 +1,458 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Тест водителей EDA</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Rubik:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="style.css">
+
+</head>
+<body>
+<header class="topbar"><div class="in"><div id="logo"></div><div class="spacer"></div>
+  <div class="lang" role="group" aria-label="Язык / Тіл"><button type="button" data-lang="ru">Рус</button><button type="button" data-lang="kk">Қаз</button></div>
+</div></header>
+
+<main id="app">
+  <!-- 1. Старт -->
+  <section id="v-start" class="card">
+    <div class="eyebrow" data-t="eyebrow"></div>
+    <h1 data-t="title"></h1>
+    <p class="muted" data-t="intro"></p>
+    <div class="langpick">
+      <span data-t="choose_lang"></span>
+      <div class="row"><button class="btn ghost" type="button" data-lang="ru">Русский</button><button class="btn ghost" type="button" data-lang="kk">Қазақ тілі</button></div>
+    </div>
+    <div class="steps">
+      <div class="step"><span class="n" data-t="st1_n"></span><span id="st1_d"></span></div>
+      <div class="step"><span class="n" data-t="st2_n"></span><span id="st2_d"></span></div>
+      <div class="step"><span class="n" data-t="st3_n"></span><span data-t="st3_d"></span></div>
+    </div>
+    <div class="row">
+      <button class="btn" id="go1" type="button" data-t="go1"></button>
+      <button class="btn ghost" id="go2" type="button" data-t="go2"></button>
+    </div>
+    <p id="demo-note" class="notice" hidden data-t="demo"></p>
+  </section>
+
+  <!-- 2. Анкета этапа 1 -->
+  <section id="v-form1" class="card" hidden>
+    <div class="eyebrow" data-t="f1_eyebrow"></div>
+    <h2 data-t="f1_title"></h2>
+    <form id="f1" novalidate class="card" style="border:0;padding:0">
+      <div class="grid2">
+        <label class="f"><span data-t="fio"></span><input type="text" id="fio" autocomplete="name" maxlength="120"></label>
+        <label class="f"><span data-t="phone"></span><input type="tel" id="phone" autocomplete="tel" maxlength="20" placeholder="+7 701 123 45 67"></label>
+        <label class="f"><span data-t="city"></span><input type="text" id="city" maxlength="60"></label>
+        <label class="f"><span data-t="exp_total"></span><input type="number" id="exp_total" min="0" max="60" inputmode="numeric"></label>
+        <label class="f"><span data-t="exp_ce"></span><input type="number" id="exp_ce" min="0" max="60" inputmode="numeric"></label>
+        <label class="f"><span data-t="exp_intl"></span><input type="number" id="exp_intl" min="0" max="60" inputmode="numeric"></label>
+      </div>
+      <div class="f"><span style="font-weight:500" data-t="cats"></span>
+        <div class="checks" id="cats">
+          <label class="chip"><input type="checkbox" value="B">B</label>
+          <label class="chip"><input type="checkbox" value="C1">C1</label>
+          <label class="chip"><input type="checkbox" value="C">C</label>
+          <label class="chip"><input type="checkbox" value="C1E">C1E</label>
+          <label class="chip"><input type="checkbox" value="CE">CE</label>
+          <label class="chip"><input type="checkbox" value="D">D</label>
+        </div>
+      </div>
+      <div class="f"><span style="font-weight:500" data-t="have"></span>
+        <div class="checks">
+          <label class="chip"><input type="checkbox" id="has_card"><span data-t="has_card"></span></label>
+          <label class="chip"><input type="checkbox" id="has_adr"><span data-t="has_adr"></span></label>
+          <label class="chip"><input type="checkbox" id="has_passport"><span data-t="has_passport"></span></label>
+          <label class="chip"><input type="checkbox" id="has_c95"><span data-t="has_c95"></span></label>
+        </div>
+      </div>
+      <label class="chip" style="border-radius:8px"><input type="checkbox" id="consent"><span data-t="consent"></span></label>
+      <p class="notice small" data-t="rules"></p>
+      <p class="err" id="err1" hidden></p>
+      <div class="row"><button class="btn" type="submit" data-t="to_test"></button><button class="btn ghost" type="button" data-back data-t="back"></button></div>
+    </form>
+  </section>
+
+  <!-- 3. Вход на этап 2 -->
+  <section id="v-form2" class="card" hidden>
+    <div class="eyebrow" data-t="f2_eyebrow"></div>
+    <h2 data-t="f2_title"></h2>
+    <p class="muted small" data-t="f2_hint"></p>
+    <form id="f2" novalidate class="card" style="border:0;padding:0">
+      <div class="grid2">
+        <label class="f"><span data-t="fio"></span><input type="text" id="fio2" maxlength="120"></label>
+        <label class="f"><span data-t="phone"></span><input type="tel" id="phone2" maxlength="20" placeholder="+7 701 123 45 67"></label>
+        <label class="f"><span data-t="code"></span><input type="text" id="code2" maxlength="20" autocomplete="off"></label>
+      </div>
+      <p class="notice small" data-t="rules"></p>
+      <p class="err" id="err2" hidden></p>
+      <div class="row"><button class="btn" type="submit" data-t="start2"></button><button class="btn ghost" type="button" data-back data-t="back"></button></div>
+    </form>
+  </section>
+
+  <!-- 4. Тест -->
+  <section id="v-test" class="card" hidden>
+    <div class="qhead"><span id="q-stage"></span><span><span data-t="question"></span> <b id="q-n"></b> / <span id="q-total"></span></span><span class="timer" id="timer"></span></div>
+    <div class="progress"><i id="bar"></i></div>
+    <p class="err" id="leave-warn" hidden></p>
+    <div class="qtext" id="q-text"></div>
+    <div class="qimg" id="q-img" hidden></div>
+    <div class="opts" id="q-opts" role="radiogroup"></div>
+    <div class="row">
+      <button class="btn ghost" id="prev" type="button" data-t="prev"></button>
+      <span class="grow"></span>
+      <button class="btn" id="next" type="button"></button>
+    </div>
+    <div class="dots" id="dots"></div>
+    <div id="finish-box" class="notice" hidden>
+      <p style="margin:0 0 8px"><span data-t="unans"></span> <b id="unans"></b>. <span data-t="finish_q"></span></p>
+      <div class="row"><button class="btn y" id="finish-yes" type="button" data-t="finish"></button><button class="btn ghost" id="finish-no" type="button" data-t="return"></button></div>
+    </div>
+  </section>
+
+  <!-- 5. Результат -->
+  <section id="v-result" class="card" hidden>
+    <div class="eyebrow" id="r-stage"></div>
+    <div class="result-big" id="r-score"></div>
+    <h2 id="r-title"></h2>
+    <p id="r-text" class="muted"></p>
+    <p id="r-send" class="small"></p>
+    <div class="row"><button class="btn ghost" id="retry-send" type="button" hidden data-t="resend"></button><button class="btn" id="home" type="button" data-t="home"></button></div>
+  </section>
+
+  <footer><a href="admin.html" data-t="admin"></a></footer>
+</main>
+
+<script src="config.js"></script>
+<script src="img.js"></script>
+<script src="bank-core.js"></script>
+<script src="bank1a.js"></script>
+<script src="bank1b.js"></script>
+<script src="bank1c.js"></script>
+<script src="bank1d.js"></script>
+<script src="bank2a.js"></script>
+<script src="bank2b.js"></script>
+<script src="bank2c.js"></script>
+<script src="common.js"></script>
+<script>
+(function () {
+  var C = window.APP_CONFIG, Q = window.QUESTIONS;
+  var $ = function (id) { return document.getElementById(id); };
+
+  var T = {
+    ru: {
+      eyebrow: "Онлайн-тестирование", title: "Тест для водителей международных перевозок",
+      intro: "Тест помогает отобрать опытных водителей категории CE. Отвечайте самостоятельно, без подсказок: на практическом этапе инструктор проверит те же навыки за рулём.",
+      choose_lang: "Выберите язык теста:",
+      st1_n: "Этап 1 · отборочный", st1_d: "Анкета и {n} вопросов: ПДД РК, документы, основы перевозок, осмотр автомобиля. {m} минут.",
+      st2_n: "Этап 2 · по приглашению", st2_d: "{n} сложных вопросов по ситуациям из практики, половина — по рисункам и схемам: тахограф и режим труда (ЕС 561/2006, 165/2014), крепление груза (EN 12195, EN 12642), сцепка, маневрирование, неисправности, зима и горы, негабарит. {m} минут.",
+      st3_n: "Практика · на площадке", st3_d: "Парковка задним ходом, сцепка и расцепка, осмотр автомобиля, тахограф, крепление груза.",
+      go1: "Начать этап 1", go2: "У меня код на этап 2",
+      demo: "Демо-режим: результаты сохраняются только в этом браузере. Чтобы они уходили администратору, подключите Google Таблицу (см. инструкцию).",
+      f1_eyebrow: "Этап 1 · анкета", f1_title: "Данные водителя",
+      fio: "ФИО полностью", phone: "Телефон", city: "Город проживания", exp_total: "Общий стаж вождения, лет", exp_ce: "Стаж на категории CE, лет", exp_intl: "Стаж международных рейсов, лет",
+      cats: "Открытые категории", have: "Есть в наличии", has_card: "Карта водителя (тахограф)", has_adr: "Свидетельство ДОПОГ (ADR)", has_passport: "Загранпаспорт", has_c95: "Код 95",
+      consent: "Согласен на сбор и обработку персональных данных (Закон РК «О персональных данных и их защите»)",
+      to_test: "Перейти к тесту", back: "Назад",
+      f2_eyebrow: "Этап 2 · по приглашению", f2_title: "Вход на второй этап", f2_hint: "Укажите тот же телефон, что и на первом этапе, и код, который вам сообщил рекрутер.",
+      code: "Код доступа", start2: "Начать этап 2",
+      question: "Вопрос", prev: "← Назад", next: "Далее →", finish_test: "Завершить тест",
+      unans: "Без ответа осталось вопросов:", finish_q: "Завершить тест?", finish: "Завершить", return: "Вернуться",
+      stage1: "Этап 1 · основы", stage2: "Этап 2 · практика", stage1s: "Этап 1", stage2s: "Этап 2", timeout: " · время вышло",
+      of: " из ", passed: "Тест пройден", failed: "Тест не пройден",
+      pass1: "Спасибо! Рекрутер свяжется с вами и пригласит на второй этап собеседования.",
+      pass2: "Спасибо! Рекрутер свяжется с вами и пригласит на практический экзамен.",
+      fail: "Спасибо за участие. Рекрутер свяжется с вами, если появится подходящая вакансия.",
+      sending: "Отправляем результат…", sent: "Результат отправлен администратору.", saved_demo: "Результат сохранён (демо-режим, в этом браузере).",
+      send_fail: "Не удалось отправить результат — нет связи. Он сохранён на этом устройстве; нажмите «Отправить ещё раз» или сообщите администратору.",
+      send_fail2: "Снова не получилось. Проверьте интернет и попробуйте позже.", resend: "Отправить ещё раз", home: "На главную", admin: "Вход для администратора",
+      e_fio: "Укажите фамилию и имя полностью.", e_phone: "Проверьте номер телефона: нужно 11 цифр, например +7 701 123 45 67.", e_city: "Укажите город.",
+      e_exp: "Заполните стаж (если опыта нет — поставьте 0).", e_cats: "Отметьте открытые категории.", e_consent: "Нужно согласие на обработку персональных данных.",
+      e_code: "Неверный код. Уточните его у рекрутера.", ph_fio: "Иванов Сергей Петрович", ph_city: "Алматы",
+      rules: "Важно: каждый этап можно пройти только один раз, повторной попытки не будет. Вопросы у каждого водителя свои. Не закрывайте страницу и не переключайтесь на другие приложения: каждый уход со страницы записывается и виден рекрутеру.",
+      checking: "Проверяем…",
+      e_taken: "Вы уже проходили этот этап. Повторная сдача не предусмотрена. Если это ошибка, обратитесь к рекрутеру.",
+      e_started: "Тест на этот номер уже был начат. Повторный запуск невозможен. Если тест прервался из-за сбоя, обратитесь к рекрутеру.",
+      e_net: "Нет связи с сервером. Проверьте интернет и попробуйте ещё раз.",
+      leave_warn: "Вы покидали страницу теста ({n}). Это записано и будет видно рекрутеру."
+    },
+    kk: {
+      eyebrow: "Онлайн-тестілеу", title: "Халықаралық тасымал жүргізушілеріне арналған тест",
+      intro: "Тест CE санатындағы тәжірибелі жүргізушілерді іріктеуге көмектеседі. Сұрақтарға өз бетіңізше, көмексіз жауап беріңіз: практикалық кезеңде нұсқаушы осы дағдыларды руль артында тексереді.",
+      choose_lang: "Тест тілін таңдаңыз:",
+      st1_n: "1-кезең · іріктеу", st1_d: "Сауалнама және {n} сұрақ: ҚР ЖЖҚ, құжаттар, тасымал негіздері, автомобильді тексеру. {m} минут.",
+      st2_n: "2-кезең · шақыру бойынша", st2_d: "Тәжірибедегі жағдайлар бойынша {n} күрделі сұрақ, жартысы — суреттер мен сызбалар бойынша: тахограф және еңбек режимі (ЕО 561/2006, 165/2014), жүкті бекіту (EN 12195, EN 12642), тіркеу, маневр, ақаулар, қыс пен тау, ірі габаритті жүк. {m} минут.",
+      st3_n: "Практика · алаңда", st3_d: "Артқа жүріп тұраққа қою, тіркеу және ағыту, автомобильді тексеру, тахограф, жүкті бекіту.",
+      go1: "1-кезеңді бастау", go2: "Менде 2-кезеңге код бар",
+      demo: "Демо-режим: нәтижелер тек осы браузерде сақталады. Олар әкімшіге жіберілуі үшін Google Кестені қосыңыз (нұсқаулықты қараңыз).",
+      f1_eyebrow: "1-кезең · сауалнама", f1_title: "Жүргізуші туралы мәліметтер",
+      fio: "Тегі, аты, әкесінің аты", phone: "Телефон", city: "Тұратын қаласы", exp_total: "Жалпы жүргізу өтілі, жыл", exp_ce: "CE санаты бойынша өтіл, жыл", exp_intl: "Халықаралық рейстер өтілі, жыл",
+      cats: "Ашылған санаттар", have: "Бар құжаттар", has_card: "Жүргізуші картасы (тахограф)", has_adr: "ДОПОГ (ADR) куәлігі", has_passport: "Шетелдік төлқұжат", has_c95: "Код 95",
+      consent: "Дербес деректерді жинауға және өңдеуге келісемін (ҚР «Дербес деректер және оларды қорғау туралы» Заңы)",
+      to_test: "Тестке өту", back: "Артқа",
+      f2_eyebrow: "2-кезең · шақыру бойынша", f2_title: "Екінші кезеңге кіру", f2_hint: "Бірінші кезеңдегі телефонды және рекрутер берген кодты енгізіңіз.",
+      code: "Кіру коды", start2: "2-кезеңді бастау",
+      question: "Сұрақ", prev: "← Артқа", next: "Әрі қарай →", finish_test: "Тестті аяқтау",
+      unans: "Жауапсыз қалған сұрақтар:", finish_q: "Тестті аяқтайсыз ба?", finish: "Аяқтау", return: "Қайту",
+      stage1: "1-кезең · негіздер", stage2: "2-кезең · практика", stage1s: "1-кезең", stage2s: "2-кезең", timeout: " · уақыт бітті",
+      of: " / ", passed: "Тест тапсырылды", failed: "Тест тапсырылмады",
+      pass1: "Рахмет! Рекрутер сізбен хабарласып, сұхбаттың екінші кезеңіне шақырады.",
+      pass2: "Рахмет! Рекрутер сізбен хабарласып, практикалық емтиханға шақырады.",
+      fail: "Қатысқаныңызға рахмет. Қолайлы бос орын пайда болса, рекрутер сізбен хабарласады.",
+      sending: "Нәтиже жіберілуде…", sent: "Нәтиже әкімшіге жіберілді.", saved_demo: "Нәтиже сақталды (демо-режим, осы браузерде).",
+      send_fail: "Нәтижені жіберу мүмкін болмады — байланыс жоқ. Ол осы құрылғыда сақталды; «Қайта жіберу» батырмасын басыңыз немесе әкімшіге хабарлаңыз.",
+      send_fail2: "Тағы да болмады. Интернетті тексеріп, кейінірек қайталаңыз.", resend: "Қайта жіберу", home: "Басты бетке", admin: "Әкімшіге кіру",
+      e_fio: "Тегіңіз бен атыңызды толық жазыңыз.", e_phone: "Телефон нөмірін тексеріңіз: 11 сан қажет, мысалы +7 701 123 45 67.", e_city: "Қаланы көрсетіңіз.",
+      e_exp: "Өтілді толтырыңыз (тәжірибе болмаса — 0 қойыңыз).", e_cats: "Ашылған санаттарды белгілеңіз.", e_consent: "Дербес деректерді өңдеуге келісім қажет.",
+      e_code: "Код қате. Оны рекрутерден нақтылаңыз.", ph_fio: "Ахметов Ерлан Серікұлы", ph_city: "Алматы",
+      rules: "Маңызды: әр кезеңді тек бір рет тапсыруға болады, қайта тапсыру болмайды. Әр жүргізушінің сұрақтары әртүрлі. Бетті жаппаңыз және басқа қосымшаларға ауыспаңыз: беттен әр шығу жазылады және рекрутерге көрінеді.",
+      checking: "Тексерілуде…",
+      e_taken: "Сіз бұл кезеңді тапсырғансыз. Қайта тапсыру қарастырылмаған. Қате болса, рекрутерге хабарласыңыз.",
+      e_started: "Бұл нөмірге тест бұрын басталған. Қайта бастау мүмкін емес. Тест ақаудан үзілсе, рекрутерге хабарласыңыз.",
+      e_net: "Сервермен байланыс жоқ. Интернетті тексеріп, қайталаңыз.",
+      leave_warn: "Сіз тест бетінен шықтыңыз ({n}). Бұл жазылды және рекрутерге көрінеді."
+    }
+  };
+
+  function NQ(stage) { return Math.min((stage === 1 ? C.STAGE1_QUESTIONS : C.STAGE2_QUESTIONS) || 30, Q[stage].length); }
+  var LANG = "ru";
+  try { LANG = localStorage.getItem("eda_lang") === "kk" ? "kk" : "ru"; } catch (e) {}
+  function t(k) { return T[LANG][k]; }
+
+  function applyLang() {
+    document.documentElement.lang = LANG;
+    document.querySelectorAll("[data-t]").forEach(function (el) { el.textContent = t(el.dataset.t); });
+    $("st1_d").textContent = t("st1_d").replace("{n}", NQ(1)).replace("{m}", C.STAGE1_MINUTES);
+    $("st2_d").textContent = t("st2_d").replace("{n}", NQ(2)).replace("{m}", C.STAGE2_MINUTES);
+    $("fio").placeholder = t("ph_fio"); $("city").placeholder = t("ph_city");
+    document.querySelectorAll("[data-lang]").forEach(function (b) { b.classList.toggle("on", b.dataset.lang === LANG); b.setAttribute("aria-pressed", b.dataset.lang === LANG); });
+  }
+  document.querySelectorAll("[data-lang]").forEach(function (b) {
+    b.onclick = function () {
+      if (S && !$("v-test").hidden) return; // во время теста язык не меняется
+      LANG = b.dataset.lang; try { localStorage.setItem("eda_lang", LANG); } catch (e) {} applyLang();
+    };
+  });
+
+  var views = ["v-start", "v-form1", "v-form2", "v-test", "v-result"];
+  function show(v) { views.forEach(function (x) { $(x).hidden = x !== v; }); document.querySelector(".lang").classList.toggle("locked", v === "v-test"); window.scrollTo(0, 0); }
+  renderLogo($("logo"));
+  $("demo-note").hidden = !API.demo;
+
+  var S = null, tick = null, lastRec = null;
+  applyLang();
+
+  function shuffle(a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var x = a[i]; a[i] = a[j]; a[j] = x; } return a; }
+
+  $("go1").onclick = function () { show("v-form1"); $("fio").focus(); };
+  $("go2").onclick = function () { show("v-form2"); $("fio2").focus(); };
+  document.querySelectorAll("[data-back]").forEach(function (b) { b.onclick = function () { show("v-start"); }; });
+  $("home").onclick = function () { show("v-start"); };
+
+  function fail(el, key) { el.textContent = t(key); el.hidden = false; }
+
+  $("f1").onsubmit = function (e) {
+    e.preventDefault();
+    var err = $("err1"); err.hidden = true;
+    var fio = $("fio").value.trim(), phone = normPhone($("phone").value), city = $("city").value.trim();
+    var et = $("exp_total").value, ec = $("exp_ce").value, ei = $("exp_intl").value;
+    var cats = Array.prototype.map.call(document.querySelectorAll("#cats input:checked"), function (i) { return i.value; });
+    if (fio.split(/\s+/).length < 2) return fail(err, "e_fio");
+    if (phone.length < 11) return fail(err, "e_phone");
+    if (!city) return fail(err, "e_city");
+    if (et === "" || ec === "" || ei === "") return fail(err, "e_exp");
+    if (!cats.length) return fail(err, "e_cats");
+    if (!$("consent").checked) return fail(err, "e_consent");
+    begin(1, err, this, { fio: fio, phone: phone, city: city, exp_total: +et, exp_ce: +ec, exp_intl: +ei, categories: cats.join(", "),
+      has_card: $("has_card").checked, has_adr: $("has_adr").checked, has_passport: $("has_passport").checked, has_c95: $("has_c95").checked });
+  };
+
+  $("f2").onsubmit = function (e) {
+    e.preventDefault();
+    var err = $("err2"); err.hidden = true;
+    var fio = $("fio2").value.trim(), phone = normPhone($("phone2").value);
+    if (fio.split(/\s+/).length < 2) return fail(err, "e_fio");
+    if (phone.length < 11) return fail(err, "e_phone");
+    if ($("code2").value.trim().toUpperCase() !== String(C.STAGE2_CODE).toUpperCase()) return fail(err, "e_code");
+    begin(2, err, this, { fio: fio, phone: phone });
+  };
+
+  /* ---------- Выборка вопросов ---------- */
+  // Из банка берётся NQ вопросов, пропорционально темам (у каждого водителя свой набор).
+  function pickBalanced(pool, n) {
+    if (n <= 0) return [];
+    var by = {}; pool.forEach(function (q) { (by[q.topic] = by[q.topic] || []).push(q); });
+    var topics = Object.keys(by), quota = {}, used = 0;
+    var rem = topics.map(function (tp) { var x = n * by[tp].length / pool.length; quota[tp] = Math.min(Math.floor(x), by[tp].length); used += quota[tp]; return [tp, x - Math.floor(x)]; });
+    shuffle(rem).sort(function (a, b) { return b[1] - a[1]; }).forEach(function (r) { if (used < n && quota[r[0]] < by[r[0]].length) { quota[r[0]]++; used++; } });
+    var out = [], rest = [];
+    topics.forEach(function (tp) { var a = shuffle(by[tp]); out = out.concat(a.slice(0, quota[tp])); rest = rest.concat(a.slice(quota[tp])); });
+    return out.concat(shuffle(rest).slice(0, n - out.length));
+  }
+  function hasImg(q) { return !!q.img; }
+  function sample(stage) {
+    var bank = Q[stage], n = NQ(stage);
+    if (stage === 2) {
+      var withImg = bank.filter(hasImg), noImg = bank.filter(function (q) { return !hasImg(q); });
+      var ni = Math.min(C.STAGE2_IMG_QUESTIONS || Math.round(n / 2), withImg.length, n);
+      return shuffle(pickBalanced(withImg, ni).concat(pickBalanced(noImg, n - ni)));
+    }
+    return shuffle(pickBalanced(bank, n));
+  }
+
+  /* ---------- Начало теста: одна попытка ---------- */
+  function begin(stage, err, form, profile) {
+    var btn = form.querySelector('button[type="submit"]'), label = btn.textContent;
+    var sid = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+    btn.disabled = true; btn.textContent = t("checking");
+    API.start({ ts: new Date().toISOString(), phone: profile.phone, stage: stage, fio: profile.fio, lang: LANG, sid: sid })
+      .then(function (r) {
+        if (!r.allowed) return fail(err, r.reason === "taken" ? "e_taken" : "e_started");
+        start(stage, profile, sid);
+      })
+      .catch(function () { fail(err, "e_net"); })
+      .then(function () { btn.disabled = false; btn.textContent = label; });
+  }
+
+  function start(stage, profile, sid) {
+    S = { stage: stage, lang: LANG, profile: profile, sid: sid,
+      items: sample(stage).map(function (q) { return { q: q, perm: shuffle(q.o.ru.map(function (_, i) { return i; })) }; }),
+      answers: {}, i: 0, t0: Date.now(), limit: (stage === 1 ? C.STAGE1_MINUTES : C.STAGE2_MINUTES) * 60, leaves: 0, away: 0 };
+    run();
+  }
+
+  // Сохранение начатого теста: при случайной перезагрузке страницы водитель продолжит тот же тест, время идёт.
+  var LS_SESSION = "eda_session";
+  function saveSession() {
+    if (!S) return;
+    try { localStorage.setItem(LS_SESSION, JSON.stringify({ stage: S.stage, lang: S.lang, profile: S.profile, sid: S.sid, ids: S.items.map(function (it) { return it.q.id; }),
+      perms: S.items.map(function (it) { return it.perm; }), answers: S.answers, i: S.i, t0: S.t0, limit: S.limit, leaves: S.leaves, away: S.away })); } catch (e) {}
+  }
+  function clearSession() { try { localStorage.removeItem(LS_SESSION); } catch (e) {} }
+  function resume() {
+    var d; try { d = JSON.parse(localStorage.getItem(LS_SESSION) || "null"); } catch (e) { d = null; }
+    if (!d || !d.ids) return false;
+    var map = {}; Q[d.stage].forEach(function (q) { map[q.id] = q; });
+    var items = d.ids.map(function (id, k) { return map[id] ? { q: map[id], perm: d.perms[k] } : null; }).filter(Boolean);
+    if (items.length !== d.ids.length) { clearSession(); return false; }
+    S = { stage: d.stage, lang: d.lang, profile: d.profile, sid: d.sid, items: items, answers: d.answers || {}, i: d.i || 0, t0: d.t0, limit: d.limit, leaves: (d.leaves || 0) + 1, away: d.away || 0 };
+    LANG = S.lang; applyLang();
+    run();
+    return true;
+  }
+
+  function run() {
+    $("q-stage").textContent = t(S.stage === 1 ? "stage1" : "stage2");
+    $("q-total").textContent = S.items.length;
+    saveSession();
+    buildDots(); show("v-test"); render(); showLeaves();
+    clearInterval(tick); tick = setInterval(updTimer, 1000); updTimer();
+  }
+
+  /* ---------- Защита от подсказок: уходы со страницы и копирование ---------- */
+  var awayAt = 0, unloading = false;
+  window.addEventListener("beforeunload", function () { unloading = true; }); // перезагрузку считаем при возврате
+  function testOn() { return S && !$("v-test").hidden; }
+  function goAway() { if (!testOn() || awayAt || unloading) return; awayAt = Date.now(); S.leaves++; saveSession(); }
+  function comeBack() { if (!awayAt) return; if (S) { S.away += Math.round((Date.now() - awayAt) / 1000); saveSession(); showLeaves(); } awayAt = 0; }
+  function showLeaves() { var w = $("leave-warn"); w.hidden = !(S && S.leaves); if (S && S.leaves) w.textContent = t("leave_warn").replace("{n}", S.leaves); }
+  document.addEventListener("visibilitychange", function () { if (document.hidden) goAway(); else comeBack(); });
+  window.addEventListener("blur", goAway);
+  window.addEventListener("focus", comeBack);
+  ["copy", "cut", "contextmenu", "selectstart", "dragstart"].forEach(function (ev) {
+    $("v-test").addEventListener(ev, function (e) { e.preventDefault(); });
+  });
+
+  function updTimer() {
+    var left = S.limit - Math.floor((Date.now() - S.t0) / 1000);
+    if (left <= 0) { clearInterval(tick); finish(true); return; }
+    var m = Math.floor(left / 60), s = left % 60;
+    $("timer").textContent = "⏱ " + m + ":" + (s < 10 ? "0" : "") + s;
+    $("timer").classList.toggle("low", left < 120);
+  }
+
+  function buildDots() {
+    var d = $("dots"); d.textContent = "";
+    S.items.forEach(function (_, k) { var b = document.createElement("button"); b.type = "button"; b.textContent = k + 1; b.onclick = function () { S.i = k; render(); }; d.appendChild(b); });
+  }
+
+  function render() {
+    var it = S.items[S.i], q = it.q, L = S.lang;
+    $("finish-box").hidden = true;
+    $("q-n").textContent = S.i + 1;
+    $("bar").style.width = (Object.keys(S.answers).length / S.items.length * 100) + "%";
+    $("q-text").textContent = q.q[L];
+    var img = typeof q.img === "function" ? q.img(L) : q.img;
+    var im = $("q-img"); im.hidden = !img; im.innerHTML = img || "";
+    var box = $("q-opts"); box.textContent = "";
+    it.perm.forEach(function (orig, k) {
+      var lab = document.createElement("label"); lab.className = "opt" + (S.answers[q.id] === orig ? " sel" : "");
+      var r = document.createElement("input"); r.type = "radio"; r.name = "opt"; r.id = "opt" + k; r.checked = S.answers[q.id] === orig;
+      r.onchange = function () { S.answers[q.id] = orig; saveSession(); render(); };
+      var sp = document.createElement("span"); sp.textContent = q.o[L][orig];
+      lab.appendChild(r); lab.appendChild(sp); box.appendChild(lab);
+    });
+    $("prev").disabled = S.i === 0;
+    $("next").textContent = S.i === S.items.length - 1 ? t("finish_test") : t("next");
+    Array.prototype.forEach.call($("dots").children, function (b, k) {
+      b.classList.toggle("done", S.answers[S.items[k].q.id] !== undefined); b.classList.toggle("cur", k === S.i);
+    });
+  }
+
+  $("prev").onclick = function () { if (S.i > 0) { S.i--; saveSession(); render(); } };
+  $("next").onclick = function () {
+    if (S.i < S.items.length - 1) { S.i++; saveSession(); render(); return; }
+    var un = S.items.length - Object.keys(S.answers).length;
+    if (un > 0) { $("unans").textContent = un; $("finish-box").hidden = false; return; }
+    finish(false);
+  };
+  $("finish-yes").onclick = function () { finish(false); };
+  $("finish-no").onclick = function () { $("finish-box").hidden = true; };
+
+  function finish(timeout) {
+    clearInterval(tick); comeBack(); clearSession();
+    var correct = 0, ans = S.items.map(function (it) {
+      var a = S.answers[it.q.id]; var ok = a === it.q.c; if (ok) correct++;
+      return { q: it.q.id, a: a === undefined ? null : a, ok: ok };
+    });
+    var total = S.items.length, pct = Math.round(correct / total * 100);
+    var pass = pct >= (S.stage === 1 ? C.STAGE1_PASS : C.STAGE2_PASS);
+    var p = S.profile, s1 = S.stage === 1, yn = function (v) { return v ? "да" : (s1 ? "нет" : ""); };
+    lastRec = {
+      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), ts: new Date().toISOString(), stage: S.stage,
+      fio: p.fio, phone: p.phone, city: p.city || "", exp_total: p.exp_total == null ? "" : p.exp_total, exp_ce: p.exp_ce == null ? "" : p.exp_ce,
+      exp_intl: p.exp_intl == null ? "" : p.exp_intl, categories: p.categories || "",
+      has_card: yn(p.has_card), has_adr: yn(p.has_adr), has_passport: yn(p.has_passport), has_c95: yn(p.has_c95),
+      score: correct, total: total, percent: pct, passed: pass ? "да" : "нет",
+      minutes: Math.round((Date.now() - S.t0) / 6000) / 10, timeout: timeout ? "да" : "нет", answers: JSON.stringify(ans), lang: S.lang,
+      leaves: S.leaves, away_sec: S.away
+    };
+    S = null;
+    $("r-stage").textContent = t(s1 ? "stage1s" : "stage2s") + (timeout ? t("timeout") : "");
+    $("leave-warn").hidden = true;
+    $("r-score").textContent = correct + t("of") + total;
+    $("r-title").textContent = t(pass ? "passed" : "failed");
+    $("r-text").textContent = pass ? t(s1 ? "pass1" : "pass2") : t("fail");
+    show("v-result");
+    send();
+  }
+
+  function send() {
+    var el = $("r-send"), btn = $("retry-send");
+    el.textContent = t("sending"); btn.hidden = true;
+    API.submit(lastRec).then(function () { el.textContent = t(API.demo ? "saved_demo" : "sent"); })
+      .catch(function () { el.textContent = t("send_fail"); btn.hidden = false; });
+  }
+  $("retry-send").onclick = function () {
+    $("r-send").textContent = t("sending");
+    API.retryPending().then(function () { $("r-send").textContent = t("sent"); $("retry-send").hidden = true; })
+      .catch(function () { $("r-send").textContent = t("send_fail2"); });
+  };
+  API.retryPending().catch(function () {});
+  resume();
+})();
+</script>
+</body>
+</html>

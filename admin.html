@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Админка теста водителей</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="robots" content="noindex,nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Rubik:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="style.css">
+
+</head>
+<body>
+<header class="topbar wide"><div class="in"><div id="logo"></div><div class="spacer"></div><div class="tag">Администратор · результаты тестирования</div></div></header>
+
+<main class="wide">
+  <section id="v-login" class="card" style="max-width:440px">
+    <h1>Вход для администратора</h1>
+    <form id="login" class="card" style="border:0;padding:0" novalidate>
+      <label class="f">Пароль<input type="password" id="pwd" autocomplete="current-password"></label>
+      <p class="err" id="lerr" hidden></p>
+      <button class="btn" type="submit">Войти</button>
+    </form>
+    <p class="muted small" id="demo-hint" hidden>Демо-режим: пароль задан в config.js (по умолчанию «admin»). Видны результаты, пройденные в этом браузере.</p>
+  </section>
+
+  <section id="v-main" hidden style="display:grid;gap:18px">
+    <div class="stats" id="stats"></div>
+    <div class="card">
+      <div class="row">
+        <input type="search" id="q" class="grow" placeholder="Поиск по ФИО, телефону, городу" style="max-width:340px">
+        <select id="flt" style="width:auto">
+          <option value="all">Все кандидаты</option>
+          <option value="pre">Подходят по анкете (CE ≥ мин. стажа) и сдали этап 1</option>
+          <option value="s1">Сдали этап 1</option>
+          <option value="s2">Сдали этап 2</option>
+          <option value="nodec">Без решения</option>
+        </select>
+        <span class="grow"></span>
+        <button class="btn ghost" id="reload" type="button">Обновить</button>
+        <button class="btn y" id="export" type="button">Экспорт в Excel (CSV)</button>
+      </div>
+      <p class="small muted" id="exp-msg" hidden></p>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Дата</th><th>ФИО</th><th>Телефон</th><th>Город</th><th>Стаж / CE / межд.</th><th>Категории</th><th>Язык</th><th>Этап 1</th><th>Этап 2</th><th>Практика</th><th>Решение</th></tr></thead>
+          <tbody id="tb"></tbody>
+        </table>
+      </div>
+      <p class="muted small" id="empty" hidden>Пока нет результатов. Они появятся здесь, когда водители пройдут тест.</p>
+    </div>
+
+    <div class="card" id="started-card" hidden>
+      <h2>Начали тест и не завершили</h2>
+      <p class="small muted">Повторно начать тест водитель не может. Если тест прервался из-за сбоя (пропал интернет, разрядился телефон), сбросьте попытку — тогда водитель сможет начать этап заново с новым набором вопросов. Сданный этап сбросить нельзя.</p>
+      <div class="tablewrap"><table><thead><tr><th>Начал</th><th>ФИО</th><th>Телефон</th><th>Этап</th><th>Язык</th><th></th></tr></thead><tbody id="st-tb"></tbody></table></div>
+      <p class="small muted" id="st-msg"></p>
+    </div>
+
+    <div class="card" id="detail" hidden>
+      <div class="row"><h2 id="d-name" class="grow"></h2><button class="btn ghost" id="d-close" type="button">Закрыть</button></div>
+      <dl class="kv" id="d-kv"></dl>
+      <div class="grid2" style="align-items:start">
+        <div class="card" style="padding:16px">
+          <h3>Практический экзамен</h3>
+          <form id="pf" class="ans" novalidate>
+            <div id="p-items"></div>
+            <label class="f">Комментарий инструктора<textarea id="p-comment" maxlength="1000"></textarea></label>
+            <label class="f">Решение
+              <select id="p-dec"><option value="">— не выбрано —</option><option>Принят</option><option>Резерв</option><option>Отказ</option></select></label>
+            <div class="row"><button class="btn" type="submit">Сохранить оценку</button><span class="small muted" id="p-msg"></span></div>
+          </form>
+        </div>
+        <div class="card" style="padding:16px;min-width:0">
+          <h3>Ответы</h3>
+          <div class="ans" id="d-ans"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script src="config.js"></script>
+<script src="img.js"></script>
+<script src="bank-core.js"></script>
+<script src="bank1a.js"></script>
+<script src="bank1b.js"></script>
+<script src="bank1c.js"></script>
+<script src="bank1d.js"></script>
+<script src="bank2a.js"></script>
+<script src="bank2b.js"></script>
+<script src="bank2c.js"></script>
+<script src="common.js"></script>
+<script>
+(function () {
+  var C = window.APP_CONFIG, $ = function (id) { return document.getElementById(id); };
+  renderLogo($("logo"));
+  $("demo-hint").hidden = !API.demo;
+  var KEY = "", DATA = { results: [], practical: [], started: [] }, CANDS = [], CUR = null, TOP = window.TOPICS || {};
+  var QMAP = {}; [1, 2].forEach(function (s) { window.QUESTIONS[s].forEach(function (q) { QMAP[q.id] = q; }); });
+  var PRACT = [["park", "Парковка задним ходом"], ["couple", "Сцепка / расцепка прицепа"], ["inspect", "Осмотр и устройство автомобиля"], ["tacho", "Работа с тахографом"], ["lashing", "Крепление груза (EN 12195)"]];
+
+  $("login").onsubmit = function (e) {
+    e.preventDefault(); $("lerr").hidden = true;
+    var k = $("pwd").value; if (!k) return;
+    load(k).then(function () { KEY = k; $("v-login").hidden = true; $("v-main").hidden = false; })
+      .catch(function (err) { $("lerr").textContent = String(err.message) === "auth" ? "Неверный пароль." : "Не удалось загрузить данные. Проверьте интернет и адрес SCRIPT_URL в config.js."; $("lerr").hidden = false; });
+  };
+  $("reload").onclick = function () { load(KEY); };
+
+  function load(k) { return API.list(k).then(function (d) { DATA = { results: d.results || [], practical: d.practical || [], started: d.started || [] }; build(); render(); renderStarted(); }); }
+
+  function nfio(f) { return String(f || "").toLowerCase().replace(/ё/g, "е").replace(/\s+/g, " ").trim(); }
+  function leavesPill(r) { return r && +r.leaves ? ' <span class="pill bad" title="Уходил со страницы во время теста">уходы: ' + esc(r.leaves) + "</span>" : ""; }
+
+  function renderStarted() {
+    var done = {}; DATA.results.forEach(function (r) { done[normPhone(r.phone) + "|" + r.stage] = 1; });
+    var pend = DATA.started.filter(function (s) { return !done[normPhone(s.phone) + "|" + s.stage]; })
+      .sort(function (a, b) { return String(b.ts).localeCompare(String(a.ts)); });
+    $("started-card").hidden = !pend.length;
+    $("st-tb").innerHTML = pend.map(function (s, i) {
+      return "<tr><td>" + esc(fdate(s.ts)) + "</td><td>" + esc(s.fio) + "</td><td>" + esc(fphone(normPhone(s.phone))) + "</td><td>" + esc(s.stage) + "</td><td>" + (s.lang === "kk" ? "KZ" : "RU") +
+        '</td><td><button class="btn ghost" type="button" data-r="' + i + '">Сбросить попытку</button></td></tr>';
+    }).join("");
+    Array.prototype.forEach.call($("st-tb").querySelectorAll("button[data-r]"), function (b) {
+      b.onclick = function () {
+        var s = pend[+b.dataset.r];
+        if (!b.dataset.sure) { b.dataset.sure = "1"; b.textContent = "Точно сбросить?"; b.classList.remove("ghost"); return; }
+        b.disabled = true; $("st-msg").textContent = "Сбрасываем…";
+        API.reset(KEY, normPhone(s.phone), +s.stage).then(function () { $("st-msg").textContent = "Попытка сброшена: " + s.fio + ", этап " + s.stage + "."; return load(KEY); })
+          .catch(function (e) { $("st-msg").textContent = String(e.message) === "taken" ? "Этот этап уже сдан, сбросить нельзя." : "Не получилось. Проверьте интернет и попробуйте ещё раз."; b.disabled = false; });
+      };
+    });
+  }
+
+  function build() {
+    var by = {};
+    DATA.results.forEach(function (r) {
+      var key = normPhone(r.phone) || r.fio; var c = by[key] || (by[key] = { phone: key, fio: r.fio, s1: null, s2: null, pr: null, last: r.ts });
+      if (+r.stage === 1) { if (!c.s1 || r.ts > c.s1.ts) c.s1 = r; c.fio = r.fio; }
+      if (+r.stage === 2) { if (!c.s2 || r.ts > c.s2.ts) c.s2 = r; }
+      if (String(r.ts) > String(c.last)) c.last = r.ts;
+    });
+    DATA.practical.forEach(function (p) { var c = by[normPhone(p.phone)]; if (c && (!c.pr || p.ts > c.pr.ts)) c.pr = p; });
+    CANDS = Object.keys(by).map(function (k) { return by[k]; }).sort(function (a, b) { return String(b.last).localeCompare(String(a.last)); });
+    // один и тот же человек с разных номеров
+    var names = {}; CANDS.forEach(function (c) { var n = nfio(c.fio); names[n] = (names[n] || 0) + 1; });
+    CANDS.forEach(function (c) { c.dupName = names[nfio(c.fio)] > 1; });
+  }
+
+  function pre(c) { return c.s1 && c.s1.passed === "да" && +c.s1.exp_ce >= C.MIN_CE_YEARS && /(^|,\s*)CE(\s*,|$)/.test(c.s1.categories || ""); }
+  function fdate(t) { var d = new Date(t); return isNaN(d) ? "" : d.toLocaleDateString("ru-RU") + " " + d.toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" }); }
+  function fphone(p) { p = String(p); return p.length === 11 ? "+" + p[0] + " " + p.slice(1, 4) + " " + p.slice(4, 7) + " " + p.slice(7, 9) + " " + p.slice(9) : p; }
+  function pill(r) { if (!r) return '<span class="pill none">—</span>'; return '<span class="pill ' + (r.passed === "да" ? "ok" : "bad") + '">' + esc(r.percent) + "%</span>"; }
+  function avg(p) { if (!p) return null; var s = 0, n = 0; PRACT.forEach(function (x) { if (+p[x[0]]) { s += +p[x[0]]; n++; } }); return n ? Math.round(s / n * 10) / 10 : null; }
+
+  function r0(c) { return c.s1 || c.s2 || {}; }
+  function filtered() {
+    var q = $("q").value.trim().toLowerCase(), f = $("flt").value;
+    return CANDS.filter(function (c) {
+      var s1 = c.s1 || {};
+      if (q && (c.fio + " " + c.phone + " " + (s1.city || "")).toLowerCase().indexOf(q) < 0) return false;
+      if (f === "pre") return pre(c);
+      if (f === "s1") return c.s1 && c.s1.passed === "да";
+      if (f === "s2") return c.s2 && c.s2.passed === "да";
+      if (f === "nodec") return !(c.pr && c.pr.decision);
+      return true;
+    });
+  }
+
+  function render() {
+    var n = CANDS.length, s1 = CANDS.filter(function (c) { return c.s1 && c.s1.passed === "да"; }).length;
+    var s2 = CANDS.filter(function (c) { return c.s2 && c.s2.passed === "да"; }).length;
+    var acc = CANDS.filter(function (c) { return c.pr && c.pr.decision === "Принят"; }).length;
+    $("stats").innerHTML = [["Кандидатов", n], ["Сдали этап 1", s1], ["Подходят для этапа 2", CANDS.filter(pre).length], ["Сдали этап 2", s2], ["Приняты", acc]]
+      .map(function (x) { return '<div class="stat"><span class="small muted">' + x[0] + "</span><b>" + x[1] + "</b></div>"; }).join("");
+    var rows = filtered(), tb = $("tb");
+    $("empty").hidden = rows.length > 0;
+    tb.innerHTML = rows.map(function (c, i) {
+      var r = c.s1 || c.s2 || {}, a = avg(c.pr), dec = c.pr && c.pr.decision;
+      var decCls = dec === "Принят" ? "ok" : dec === "Отказ" ? "bad" : dec ? "wait" : "none";
+      return '<tr data-i="' + i + '"' + (CUR === c ? ' class="active"' : "") + "><td>" + esc(fdate(c.last)) + "</td><td>" + esc(c.fio) + (pre(c) ? ' <span class="pill wait">отбор</span>' : "") + (c.dupName ? ' <span class="pill bad" title="Есть другой кандидат с такими же ФИО и другим телефоном">ФИО повторяется</span>' : "") +
+        "</td><td>" + esc(fphone(c.phone)) + "</td><td>" + esc(r.city) + "</td><td>" + (c.s1 ? esc(c.s1.exp_total) + " / " + esc(c.s1.exp_ce) + " / " + esc(c.s1.exp_intl) : "—") +
+        "</td><td>" + esc(c.s1 ? c.s1.categories : "") + "</td><td>" + (r.lang === "kk" ? "KZ" : "RU") + "</td><td>" + pill(c.s1) + leavesPill(c.s1) + "</td><td>" + pill(c.s2) + leavesPill(c.s2) + "</td><td>" + (a == null ? "—" : a + " / 5") +
+        '</td><td><span class="pill ' + decCls + '">' + esc(dec || "нет") + "</span></td></tr>";
+    }).join("");
+    Array.prototype.forEach.call(tb.children, function (tr) { tr.onclick = function () { open(rows[+tr.dataset.i]); }; });
+  }
+  $("q").oninput = render; $("flt").onchange = render;
+
+  function leavesTxt(r) { return +r.leaves ? ". Уходил со страницы: " + r.leaves + " раз(а), всего " + (+r.away_sec || 0) + " сек" : ". Со страницы не уходил"; }
+  function open(c) {
+    CUR = c; render();
+    var s1 = c.s1 || {};
+    $("d-name").textContent = c.fio;
+    var kv = [["Телефон", fphone(c.phone)], ["Город", s1.city], ["Стаж общий / CE / международный", c.s1 ? s1.exp_total + " / " + s1.exp_ce + " / " + s1.exp_intl + " лет" : "—"],
+      ["Категории", s1.categories], ["Карта водителя / ДОПОГ / загранпаспорт / Код 95", c.s1 ? [s1.has_card, s1.has_adr, s1.has_passport, s1.has_c95].join(" / ") : "—"],
+      ["Этап 1", c.s1 ? s1.score + " из " + s1.total + " (" + s1.percent + "%), " + s1.minutes + " мин" + (s1.lang === "kk" ? ", на казахском" : "") + (s1.timeout === "да" ? ", время вышло" : "") + ", " + fdate(s1.ts) + leavesTxt(s1) : "не проходил"],
+      ["Этап 2", c.s2 ? c.s2.score + " из " + c.s2.total + " (" + c.s2.percent + "%), " + c.s2.minutes + " мин" + (c.s2.lang === "kk" ? ", на казахском" : "") + (c.s2.timeout === "да" ? ", время вышло" : "") + ", " + fdate(c.s2.ts) + leavesTxt(c.s2) : "не проходил"]];
+    if (c.dupName) kv.push(["Внимание", "Есть другой кандидат с такими же ФИО, но другим телефоном. Возможна повторная сдача с другого номера."]);
+    $("d-kv").innerHTML = kv.map(function (x) { return "<dt>" + esc(x[0]) + "</dt><dd>" + esc(x[1] == null || x[1] === "" ? "—" : x[1]) + "</dd>"; }).join("");
+    var html = "";
+    [["Этап 1", c.s1], ["Этап 2", c.s2]].forEach(function (st) {
+      if (!st[1]) return; var list; try { list = JSON.parse(st[1].answers || "[]"); } catch (e) { list = []; }
+      html += "<b>" + st[0] + "</b>";
+      list.forEach(function (a, k) {
+        var q = QMAP[a.q]; if (!q) return;
+        html += '<div class="a ' + (a.ok ? "ok" : "bad") + '"><div><b>' + (k + 1) + ".</b> " + esc(q.q.ru) + '</div><div class="small">Ответ: ' + esc(a.a == null ? "нет ответа" : q.o.ru[a.a]) +
+          (a.ok ? "" : '<br>Верно: ' + esc(q.o.ru[q.c])) + '</div><div class="small muted">' + esc(TOP[q.topic] || q.topic) + (q.img ? " · с рисунком" : "") + " · " + esc(q.note) + "</div></div>";
+      });
+    });
+    $("d-ans").innerHTML = html || '<p class="muted small">Нет ответов.</p>';
+    var pr = c.pr || {};
+    $("p-items").innerHTML = PRACT.map(function (x) {
+      return '<label class="score-row"><span>' + x[1] + '</span><select id="p-' + x[0] + '"><option value="">—</option>' +
+        [1, 2, 3, 4, 5].map(function (v) { return "<option" + (+pr[x[0]] === v ? " selected" : "") + ">" + v + "</option>"; }).join("") + "</select></label>";
+    }).join("") + '<p class="small muted" style="margin:0">Оценка 1–5: 5 — без ошибок, 3 — с замечаниями, 1 — не справился.</p>';
+    $("p-comment").value = pr.comment || ""; $("p-dec").value = pr.decision || ""; $("p-msg").textContent = "";
+    $("detail").hidden = false; $("detail").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+  $("d-close").onclick = function () { CUR = null; $("detail").hidden = true; render(); };
+
+  $("pf").onsubmit = function (e) {
+    e.preventDefault(); if (!CUR) return;
+    var rec = { ts: new Date().toISOString(), phone: CUR.phone, fio: CUR.fio, comment: $("p-comment").value.trim(), decision: $("p-dec").value };
+    PRACT.forEach(function (x) { rec[x[0]] = $("p-" + x[0]).value; });
+    $("p-msg").textContent = "Сохраняем…";
+    API.savePractical(KEY, rec).then(function () { DATA.practical.push(rec); CUR.pr = rec; $("p-msg").textContent = "Сохранено."; render(); })
+      .catch(function () { $("p-msg").textContent = "Не сохранилось. Проверьте интернет и попробуйте ещё раз."; });
+  };
+
+  $("export").onclick = function () {
+    var head = ["ФИО", "Телефон", "Город", "Стаж общий", "Стаж CE", "Стаж междунар.", "Категории", "Карта водителя", "ДОПОГ", "Загранпаспорт", "Код 95",
+      "Язык", "Этап 1, %", "Этап 1 сдан", "Этап 1 дата", "Этап 1 уходы", "Этап 2, %", "Этап 2 сдан", "Этап 2 дата", "Этап 2 уходы", "Отбор по анкете",
+      "Парковка", "Сцепка", "Осмотр", "Тахограф", "Крепление", "Комментарий", "Решение"];
+    var lines = [head].concat(filtered().map(function (c) {
+      var s1 = c.s1 || {}, s2 = c.s2 || {}, p = c.pr || {};
+      return [c.fio, fphone(c.phone), s1.city, s1.exp_total, s1.exp_ce, s1.exp_intl, s1.categories, s1.has_card, s1.has_adr, s1.has_passport, s1.has_c95,
+        (r0(c).lang === "kk" ? "казахский" : "русский"), s1.percent, s1.passed, s1.ts ? fdate(s1.ts) : "", s1.leaves, s2.percent, s2.passed, s2.ts ? fdate(s2.ts) : "", s2.leaves, pre(c) ? "да" : "нет",
+        p.park, p.couple, p.inspect, p.tacho, p.lashing, p.comment, p.decision];
+    }));
+    var csv = "﻿" + lines.map(function (r) { return r.map(function (v) { v = String(v == null ? "" : v); if (/^[=+\-@]/.test(v)) v = "'" + v; return '"' + v.replace(/"/g, '""') + '"'; }).join(";"); }).join("\r\n");
+    var name = "kandidaty_" + new Date().toISOString().slice(0, 10) + ".csv";
+    var msg = $("exp-msg"); msg.hidden = true;
+    var viaClaude = window.claude && window.claude.use ? window.claude.use("downloads") : Promise.resolve(null);
+    viaClaude.then(function (dl) {
+      if (dl) return dl.save({ filename: name, data: csv });
+      var a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" })); a.download = name;
+      document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+    }).catch(function () { msg.textContent = "Файл не сохранён."; msg.hidden = false; });
+  };
+})();
+</script>
+</body>
+</html>
